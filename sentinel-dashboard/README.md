@@ -20,8 +20,15 @@ mvn clean package
 
 ```bash
 java -Dserver.port=8080 \
--Dcsp.sentinel.dashboard.server=localhost:8080 \
 -Dproject.name=sentinel-dashboard \
+-Dcsp.sentinel.dashboard.server=localhost:8080 \
+-Dsentinel.dashboard.auth.username=sentinel \
+-Dsentinel.dashboard.auth.password=sentinel \
+-Dsentinel.dashboard.nacos.server=127.0.0.1:8848 \
+-Dsentinel.dashboard.nacos.namespace=8b849837-5f96-4eb5-9579-7f2641429b94  \
+-Dsentinel.dashboard.nacos.username=nacos  \
+-Dsentinel.dashboard.nacos.password=nacos  \
+-Dsentinel.dashboard.autoRemoveMachineMillis=300000 \
 -jar target/sentinel-dashboard.jar
 ```
 

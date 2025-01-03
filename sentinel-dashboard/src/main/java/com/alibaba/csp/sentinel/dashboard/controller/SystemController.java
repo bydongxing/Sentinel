@@ -15,26 +15,26 @@
  */
 package com.alibaba.csp.sentinel.dashboard.controller;
 
-import java.util.Date;
-import java.util.List;
-
 import com.alibaba.csp.sentinel.dashboard.auth.AuthAction;
 import com.alibaba.csp.sentinel.dashboard.auth.AuthService.PrivilegeType;
-import com.alibaba.csp.sentinel.dashboard.discovery.AppManagement;
-import com.alibaba.csp.sentinel.dashboard.repository.rule.RuleRepository;
-import com.alibaba.csp.sentinel.util.StringUtil;
-
-import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.SystemRuleEntity;
-import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
 import com.alibaba.csp.sentinel.dashboard.client.SentinelApiClient;
+import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.SystemRuleEntity;
+import com.alibaba.csp.sentinel.dashboard.discovery.AppManagement;
+import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
 import com.alibaba.csp.sentinel.dashboard.domain.Result;
-
+import com.alibaba.csp.sentinel.dashboard.repository.rule.RuleRepository;
+import com.alibaba.csp.sentinel.dashboard.rule.nacos.system.SystemRuleNacosProvider;
+import com.alibaba.csp.sentinel.dashboard.rule.nacos.system.SystemRuleNacosPublisher;
+import com.alibaba.csp.sentinel.util.StringUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * @author leyou(lihao)
@@ -51,6 +51,12 @@ public class SystemController {
     private SentinelApiClient sentinelApiClient;
     @Autowired
     private AppManagement appManagement;
+
+    @Autowired
+    private SystemRuleNacosProvider systemRuleNacosProvider;
+
+    @Autowired
+    private SystemRuleNacosPublisher systemRuleNacosPublisher;
 
     private <R> Result<R> checkBasicParams(String app, String ip, Integer port) {
         if (StringUtil.isEmpty(app)) {
@@ -80,7 +86,8 @@ public class SystemController {
             return checkResult;
         }
         try {
-            List<SystemRuleEntity> rules = sentinelApiClient.fetchSystemRuleOfMachine(app, ip, port);
+            // List<SystemRuleEntity> rules = sentinelApiClient.fetchSystemRuleOfMachine(app, ip, port);
+            List<SystemRuleEntity> rules = systemRuleNacosProvider.getRules(app);
             rules = repository.saveAll(rules);
             return Result.ofSuccess(rules);
         } catch (Throwable throwable) {
@@ -113,7 +120,7 @@ public class SystemController {
         int notNullCount = countNotNullAndNotNegative(highestSystemLoad, avgRt, maxThread, qps, highestCpuUsage);
         if (notNullCount != 1) {
             return Result.ofFail(-1, "only one of [highestSystemLoad, avgRt, maxThread, qps,highestCpuUsage] "
-                + "value must be set > 0, but " + notNullCount + " values get");
+                    + "value must be set > 0, but " + notNullCount + " values get");
         }
         if (null != highestCpuUsage && highestCpuUsage > 1) {
             return Result.ofFail(-1, "highestCpuUsage must between [0.0, 1.0]");
@@ -159,8 +166,14 @@ public class SystemController {
             logger.error("Add SystemRule error", throwable);
             return Result.ofThrowable(-1, throwable);
         }
-        if (!publishRules(app, ip, port)) {
+        // if (!publishRules(app, ip, port)) {
+        //    logger.warn("Publish system rules fail after rule add");
+        //}
+        try {
+            publishRules(app);
+        } catch (Exception e) {
             logger.warn("Publish system rules fail after rule add");
+            return Result.ofThrowable(-1, e);
         }
         return Result.ofSuccess(entity);
     }
@@ -168,7 +181,7 @@ public class SystemController {
     @GetMapping("/save.json")
     @AuthAction(PrivilegeType.WRITE_RULE)
     public Result<SystemRuleEntity> apiUpdateIfNotNull(Long id, String app, Double highestSystemLoad,
-            Double highestCpuUsage, Long avgRt, Long maxThread, Double qps) {
+                                                       Double highestCpuUsage, Long avgRt, Long maxThread, Double qps) {
         if (id == null) {
             return Result.ofFail(-1, "id can't be null");
         }
@@ -221,8 +234,14 @@ public class SystemController {
             logger.error("save error:", throwable);
             return Result.ofThrowable(-1, throwable);
         }
-        if (!publishRules(entity.getApp(), entity.getIp(), entity.getPort())) {
+        // if (!publishRules(entity.getApp(), entity.getIp(), entity.getPort())) {
+        //    logger.info("publish system rules fail after rule update");
+        //}
+        try {
+            publishRules(entity.getApp());
+        } catch (Exception e) {
             logger.info("publish system rules fail after rule update");
+            return Result.ofThrowable(-1, e);
         }
         return Result.ofSuccess(entity);
     }
@@ -243,8 +262,14 @@ public class SystemController {
             logger.error("delete error:", throwable);
             return Result.ofThrowable(-1, throwable);
         }
-        if (!publishRules(oldEntity.getApp(), oldEntity.getIp(), oldEntity.getPort())) {
+        // if (!publishRules(oldEntity.getApp(), oldEntity.getIp(), oldEntity.getPort())) {
+        //    logger.info("publish system rules fail after rule delete");
+        //}
+        try {
+            publishRules(oldEntity.getApp());
+        } catch (Exception e) {
             logger.info("publish system rules fail after rule delete");
+            return Result.ofThrowable(-1, e);
         }
         return Result.ofSuccess(id);
     }
@@ -252,5 +277,10 @@ public class SystemController {
     private boolean publishRules(String app, String ip, Integer port) {
         List<SystemRuleEntity> rules = repository.findAllByMachine(MachineInfo.of(app, ip, port));
         return sentinelApiClient.setSystemRuleOfMachine(app, ip, port, rules);
+    }
+
+    private void publishRules(String app) throws Exception {
+        List<SystemRuleEntity> rules = repository.findAllByApp(app);
+        systemRuleNacosPublisher.publish(app, rules);
     }
 }
