@@ -1,4 +1,4 @@
-package com.alibaba.csp.sentinel.dashboard.rule.nacos.auth;
+package com.alibaba.csp.sentinel.dashboard.rule.nacos.authority;
 
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.AuthorityRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRuleProvider;
@@ -13,14 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class AuthRuleNacosProvider implements DynamicRuleProvider<List<AuthorityRuleEntity>> {
+public class AuthorityRuleNacosProvider implements DynamicRuleProvider<List<AuthorityRuleEntity>> {
 
     @Autowired
     private ConfigService configService;
 
     @Override
     public List<AuthorityRuleEntity> getRules(String appName) throws Exception {
-        String rules = configService.getConfig(appName + NacosConfigUtil.AUTH_DATA_ID_POSTFIX, NacosConfigUtil.GROUP_ID, 5000);
+        String rules = configService.getConfig(appName + NacosConfigUtil.AUTHORITY_DATA_ID_POSTFIX, NacosConfigUtil.GROUP_ID, 5000);
         if (StringUtil.isEmpty(rules)) {
             return new ArrayList<>();
         }

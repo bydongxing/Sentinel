@@ -64,22 +64,6 @@ public class DashboardConfig {
      */
     public static final String CONFIG_AUTO_REMOVE_MACHINE_MILLIS = "sentinel.dashboard.autoRemoveMachineMillis";
 
-    /**
-     * nacos namespace
-     */
-    public static final String CONFIG_NACOS_SERVER_URL = "sentinel.dashboard.nacos.server";
-    /**
-     * nacos namespace
-     */
-    public static final String CONFIG_NACOS_SERVER_NAMESPACE = "sentinel.dashboard.nacos.namespace";
-    /**
-     * nacos username
-     */
-    public static final String CONFIG_NACOS_USERNAME = "sentinel.dashboard.nacos.username";
-    /**
-     * nacos password
-     */
-    public static final String CONFIG_NACOS_PASSWORD = "sentinel.dashboard.nacos.password";
 
     private static final ConcurrentMap<String, Object> cacheMap = new ConcurrentHashMap<>();
 
@@ -153,33 +137,5 @@ public class DashboardConfig {
 
     public static void clearCache() {
         cacheMap.clear();
-    }
-
-    public static String getNacosServerAddr() {
-        final String configStr = getConfigStr(CONFIG_NACOS_SERVER_URL);
-        if (StringUtils.isBlank(configStr))
-            return "localhost:8080";
-        return configStr;
-    }
-
-    public static String getNacosNamespace() {
-        final String configStr = getConfigStr(CONFIG_NACOS_SERVER_NAMESPACE);
-        if (StringUtils.isBlank(configStr))
-            return "";
-        return configStr;
-    }
-
-    public static String getNacosUsername() {
-        final String configStr = getConfigStr(CONFIG_NACOS_USERNAME);
-        if (StringUtils.isBlank(configStr))
-            return "nacos";
-        return configStr;
-    }
-
-    public static String getNacosPassword() {
-        final String configStr = getConfigStr(CONFIG_NACOS_PASSWORD);
-        if (StringUtils.isBlank(configStr))
-            return "nacos";
-        return configStr;
     }
 }

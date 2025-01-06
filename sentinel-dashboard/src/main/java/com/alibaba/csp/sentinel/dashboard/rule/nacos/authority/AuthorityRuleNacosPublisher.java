@@ -1,4 +1,4 @@
-package com.alibaba.csp.sentinel.dashboard.rule.nacos.auth;
+package com.alibaba.csp.sentinel.dashboard.rule.nacos.authority;
 
 import com.alibaba.csp.sentinel.dashboard.datasource.entity.rule.AuthorityRuleEntity;
 import com.alibaba.csp.sentinel.dashboard.rule.DynamicRulePublisher;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 @Component
-public class AuthRuleNacosPublisher implements DynamicRulePublisher<List<AuthorityRuleEntity>> {
+public class AuthorityRuleNacosPublisher implements DynamicRulePublisher<List<AuthorityRuleEntity>> {
 
     @Autowired
     private ConfigService configService;
@@ -25,6 +25,6 @@ public class AuthRuleNacosPublisher implements DynamicRulePublisher<List<Authori
         if (rules == null) {
             return;
         }
-        configService.publishConfig(app + NacosConfigUtil.AUTH_DATA_ID_POSTFIX, NacosConfigUtil.GROUP_ID, JSON.toJSONString(rules), ConfigType.JSON.getType());
+        configService.publishConfig(app + NacosConfigUtil.AUTHORITY_DATA_ID_POSTFIX, NacosConfigUtil.GROUP_ID, JSON.toJSONString(rules), ConfigType.JSON.getType());
     }
 }

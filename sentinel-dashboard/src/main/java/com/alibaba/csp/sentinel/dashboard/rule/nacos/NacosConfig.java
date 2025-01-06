@@ -15,10 +15,13 @@
  */
 package com.alibaba.csp.sentinel.dashboard.rule.nacos;
 
-import com.alibaba.csp.sentinel.dashboard.config.DashboardConfig;
 import com.alibaba.nacos.api.PropertyKeyConst;
 import com.alibaba.nacos.api.config.ConfigFactory;
 import com.alibaba.nacos.api.config.ConfigService;
+import com.google.common.base.Strings;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,13 +34,48 @@ import java.util.Properties;
 @Configuration
 public class NacosConfig {
 
+    // @Bean
+    // public ConfigService nacosConfigService() throws Exception {
+    //     Properties properties = new Properties();
+    //     properties.put(PropertyKeyConst.SERVER_ADDR, DashboardConfig.getNacosServerAddr());
+    //     properties.put(PropertyKeyConst.NAMESPACE, DashboardConfig.getNacosNamespace());
+    //     properties.put(PropertyKeyConst.USERNAME, DashboardConfig.getNacosUsername());
+    //     properties.put(PropertyKeyConst.PASSWORD, DashboardConfig.getNacosPassword());
+    //     return ConfigFactory.createConfigService(properties);
+    // }
+
+
     @Bean
     public ConfigService nacosConfigService() throws Exception {
+        NacosProperties nacosProperties = nacosProperties();
         Properties properties = new Properties();
-        properties.put(PropertyKeyConst.SERVER_ADDR, DashboardConfig.getNacosServerAddr());
-        properties.put(PropertyKeyConst.NAMESPACE, DashboardConfig.getNacosNamespace());
-        properties.put(PropertyKeyConst.USERNAME, DashboardConfig.getNacosUsername());
-        properties.put(PropertyKeyConst.PASSWORD, DashboardConfig.getNacosPassword());
+        properties.put(PropertyKeyConst.SERVER_ADDR, nacosProperties.getServer());
+        if (!Strings.isNullOrEmpty(nacosProperties.getNamespace())) {
+            properties.put(PropertyKeyConst.NAMESPACE, nacosProperties.getNamespace());
+        }
+        if (!Strings.isNullOrEmpty(nacosProperties.getUsername())) {
+            properties.put(PropertyKeyConst.USERNAME, nacosProperties.getUsername());
+        }
+        if (!Strings.isNullOrEmpty(nacosProperties.getPassword())) {
+            properties.put(PropertyKeyConst.PASSWORD, nacosProperties.getPassword());
+        }
         return ConfigFactory.createConfigService(properties);
     }
+
+
+    @Bean
+    @ConfigurationProperties(prefix = "sentinel.dashboard.nacos")
+    public NacosProperties nacosProperties() {
+        return new NacosProperties();
+    }
+
+    @Getter
+    @Setter
+    public static class NacosProperties {
+        private String server;
+        private String namespace;
+        private String username;
+        private String password;
+    }
+
 }

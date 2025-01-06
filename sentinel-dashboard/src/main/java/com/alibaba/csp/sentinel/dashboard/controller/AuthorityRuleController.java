@@ -23,8 +23,8 @@ import com.alibaba.csp.sentinel.dashboard.discovery.AppManagement;
 import com.alibaba.csp.sentinel.dashboard.discovery.MachineInfo;
 import com.alibaba.csp.sentinel.dashboard.domain.Result;
 import com.alibaba.csp.sentinel.dashboard.repository.rule.RuleRepository;
-import com.alibaba.csp.sentinel.dashboard.rule.nacos.auth.AuthRuleNacosProvider;
-import com.alibaba.csp.sentinel.dashboard.rule.nacos.auth.AuthRuleNacosPublisher;
+import com.alibaba.csp.sentinel.dashboard.rule.nacos.authority.AuthorityRuleNacosProvider;
+import com.alibaba.csp.sentinel.dashboard.rule.nacos.authority.AuthorityRuleNacosPublisher;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.util.StringUtil;
 import org.slf4j.Logger;
@@ -53,10 +53,10 @@ public class AuthorityRuleController {
     private AppManagement appManagement;
 
     @Autowired
-    private AuthRuleNacosProvider authRuleNacosProvider;
+    private AuthorityRuleNacosProvider authorityRuleNacosProvider;
 
     @Autowired
-    private AuthRuleNacosPublisher authRuleNacosPublisher;
+    private AuthorityRuleNacosPublisher authorityRuleNacosPublisher;
 
     @GetMapping("/rules")
     @AuthAction(PrivilegeType.READ_RULE)
@@ -77,7 +77,7 @@ public class AuthorityRuleController {
         }
         try {
             // List<AuthorityRuleEntity> rules = sentinelApiClient.fetchAuthorityRulesOfMachine(app, ip, port);
-            List<AuthorityRuleEntity> rules = authRuleNacosProvider.getRules(app);
+            List<AuthorityRuleEntity> rules = authorityRuleNacosProvider.getRules(app);
             rules = repository.saveAll(rules);
             return Result.ofSuccess(rules);
         } catch (Throwable throwable) {
@@ -209,7 +209,7 @@ public class AuthorityRuleController {
 
     private void publishRules(String app) throws Exception {
         List<AuthorityRuleEntity> rules = repository.findAllByApp(app);
-        authRuleNacosPublisher.publish(app, rules);
+        authorityRuleNacosPublisher.publish(app, rules);
     }
     private boolean publishRules(String app, String ip, Integer port) {
         List<AuthorityRuleEntity> rules = repository.findAllByMachine(MachineInfo.of(app, ip, port));

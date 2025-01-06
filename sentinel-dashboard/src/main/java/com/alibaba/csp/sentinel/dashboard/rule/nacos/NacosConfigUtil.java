@@ -26,7 +26,7 @@ public final class NacosConfigUtil {
     public static final String FLOW_DATA_ID_POSTFIX = "-flow-rule";
     public static final String DEGRADE_DATA_ID_POSTFIX = "-degrade-rule";
     public static final String PARAM_FLOW_DATA_ID_POSTFIX = "-param-flow-rule";
-    public static final String AUTH_DATA_ID_POSTFIX = "-authority-rule";
+    public static final String AUTHORITY_DATA_ID_POSTFIX = "-authority-rule";
 
     public static final String SYS_DATA_ID_POSTFIX = "-system-rule";
     public static final String GATEWAY_API_DATA_ID_POSTFIX = "-gw-api-group-rule";
